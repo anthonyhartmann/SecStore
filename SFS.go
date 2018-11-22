@@ -1,17 +1,5 @@
-package proj2
-
-// You MUST NOT change what you import.  If you add ANY additional
-// imports it will break the autograder, and we will be Very Upset.
-
+package sfs
 import (
-
-	// You neet to add with
-	// go get github.com/nweaver/cs161-p2/userlib
-	"github.com/nweaver/cs161-p2/userlib"
-
-	// Life is much easier with json:  You are
-	// going to want to use this so you can easily
-	// turn complex structures into strings etc...
 	"encoding/json"
 	"strings"
 	"errors"
@@ -25,8 +13,6 @@ var hmacLen = userlib.HashSize	// 32
 var ivLen = userlib.BlockSize
 
 
-// Helper function: Takes the first 16 bytes and
-// converts it into the UUID type
 func bytesToUUID(data []byte) (ret uuid.UUID) {
 	for x := range ret {
 		ret[x] = data[x]
@@ -79,9 +65,6 @@ type User struct {
 	ArgonHMAC []byte
 	AprivKd *userlib.PrivateKey
 	AprivKs *userlib.PrivateKey
-	// You can add other fields here if you want...
-	// Note for JSON to marshal/unmarshal, the fields need to
-	// be public (start with a capital letter)
 }
 
 type File struct {
@@ -92,21 +75,7 @@ type File struct {
 	AppendArray []byte
 }
 
-// This creates a user.  It will only be called once for a user
-// (unless the keystore and datastore are cleared during testing purposes)
 
-// It should store a copy of the userdata, suitably encrypted, in the
-// datastore and should store the user's public key in the keystore.
-
-// The datastore may corrupt or completely erase the stored
-// information, but nobody outside should be able to get at the stored
-// User data: the name used in the datastore should not be guessable
-// without also knowing the password and username.
-
-// You are not allowed to use any global storage other than the
-// keystore and the datastore functions in the userlib library.
-
-// You can assume the user has a STRONG password
 func InitUser(username string, password string) (userdataptr *User, err error) {
 	// initialize and fill user struct
 	var userdata User
@@ -158,9 +127,7 @@ func InitUser(username string, password string) (userdataptr *User, err error) {
 	return &userdata, err
 }
 
-// This fetches the user information from the Datastore.  It should
-// fail with an error if the user/password is invalid, or if the user
-// data was corrupted, or if the user can't be found.
+// This fetches the user information from the Datastore. 
 func GetUser(username string, password string) (userdataptr *User, err error) {
 	// byte of strings
 	bUsername := []byte(username)
@@ -203,8 +170,6 @@ func GetUser(username string, password string) (userdataptr *User, err error) {
 }
 
 // This stores a file in the datastore.
-//
-// The name of the file should NOT be revealed to the datastore!
 func (userdata *User) StoreFile(filename string, data []byte) {
 	r1 := userlib.RandomBytes(keyLen)
 	k1e := userlib.RandomBytes(keyLen)
@@ -277,10 +242,6 @@ func (userdata *User) StoreFile(filename string, data []byte) {
 }
 
 // This adds on to an existing file.
-//
-// Append should be efficient, you shouldn't rewrite or reencrypt the
-// existing file, but only whatever additional information and
-// metadata you need.
 
 func (userdata *User) AppendFile(filename string, data []byte) (err error) {
 	fileInfo := userdata.FileMap[filename]
@@ -325,8 +286,6 @@ func (userdata *User) AppendFile(filename string, data []byte) (err error) {
 }
 
 // This loads a file from the Datastore.
-//
-// It should give an error if the file is corrupted in any way.
 func (userdata *User) LoadFile(filename string) (data []byte, err error) {
 	fileInfo := userdata.FileMap[filename]
 	if (fileInfo == nil){
@@ -419,21 +378,11 @@ func (userdata *User) LoadFile(filename string) (data []byte, err error) {
 	return retData, err
 }
 
-// You may want to define what you actually want to pass as a
-// sharingRecord to serialized/deserialize in the data store.
 type sharingRecord struct {
 }
 
 // This creates a sharing record, which is a key pointing to something
 // in the datastore to share with the recipient.
-
-// This enables the recipient to access the encrypted file as well
-// for reading/appending.
-
-// Note that neither the recipient NOR the datastore should gain any
-// information about what the sender calls the file.  Only the
-// recipient can access the sharing record, and only the recipient
-// should be able to know the sender.
 
 func (userdata *User) ShareFile(filename string, recipient string) (
 	msgid string, err error) {
@@ -458,10 +407,6 @@ func (userdata *User) ShareFile(filename string, recipient string) (
 	return string(value), err
 }
 
-// Note recipient's filename can be different from the sender's filename.
-// The recipient should not be able to discover the sender's view on
-// what the filename even is!  However, the recipient must ensure that
-// it is authentically from the sender.
 func (userdata *User) ReceiveFile(filename string, sender string,
 	msgid string) error {
 	senApubKs, _ := userlib.KeystoreGet(sender + "sign")
